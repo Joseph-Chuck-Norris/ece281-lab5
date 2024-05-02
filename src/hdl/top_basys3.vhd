@@ -26,13 +26,74 @@ library ieee;
 
 
 entity top_basys3 is
--- TODO
+-- TODO 
+    port(
+         clk     :   in std_logic; -- native 100MHz FPGA clock
+        sw      :   in std_logic_vector(7 downto 0);
+        btnU    :   in std_logic; -- master_reset
+        btnC    :   in std_logic; -- clk_reset
+        
+        led :   out std_logic_vector(15 downto 0);
+        -- 7-segment display segments (active-low cathodes)
+        seg :   out std_logic_vector(6 downto 0);
+        -- 7-segment display active-low enables (anodes)
+        an  :   out std_logic_vector(3 downto 0)
+        
+);
 end top_basys3;
 
 architecture top_basys3_arch of top_basys3 is 
   
 	-- declare components and signals
+     component TDM4 is
+                generic ( constant k_WIDTH : natural  := 4); -- bits in input and output
+                Port ( i_clk        : in  STD_LOGIC;
+                       i_reset      : in  STD_LOGIC; -- asynchronous
+                       i_D3         : in  STD_LOGIC_VECTOR (k_WIDTH - 1 downto 0);
+                       i_D2         : in  STD_LOGIC_VECTOR (k_WIDTH - 1 downto 0);
+                       i_D1         : in  STD_LOGIC_VECTOR (k_WIDTH - 1 downto 0);
+                       i_D0         : in  STD_LOGIC_VECTOR (k_WIDTH - 1 downto 0);
+                       o_data       : out STD_LOGIC_VECTOR (k_WIDTH - 1 downto 0);
+                       o_sel        : out STD_LOGIC_VECTOR (3 downto 0)    -- selected data line (one-cold)
+                );
+            end component TDM4;
 
+    component twoscomp_decimal is
+    port (
+        i_binary: in std_logic_vector(7 downto 0);
+        o_negative: out std_logic;
+        o_hundreds: out std_logic_vector(3 downto 0);
+        o_tens: out std_logic_vector(3 downto 0);
+        o_ones: out std_logic_vector(3 downto 0)
+    );
+     end component twoscomp_decimal;            
+            
+    component clock_divider is
+                  generic ( constant k_DIV : natural := 2    ); -- How many clk cycles until slow clock toggles
+                                                                -- Effectively, you divide the clk double this 
+                                                     -- number (e.g., k_DIV := 2 --> clock divider of 4)
+                     port (     i_clk    : in std_logic;
+                             i_reset  : in std_logic;           -- asynchronous
+                             o_clk    : out std_logic           -- divided (slow) clock
+                     );
+                     end component clock_divider;
+                     
+         component elevator_controller_fsm is
+                         Port ( i_clk     : in  STD_LOGIC;
+                                i_reset   : in  STD_LOGIC;
+                                i_adv : in  STD_LOGIC;
+                                o_cycle   : out STD_LOGIC_VECTOR (3 downto 0)           
+                              );
+                     end component elevator_controller_fsm;
+          component ALU is
+                         port (
+                         i_A : in STD_LOGIC_VECTOR (7 DOWNTO 0);
+                         i_B : in STD_LOGIC_VECTOR (7 DOWNTO 0);
+                         i_op : in STD_LOGIC_VECTOR (2 DOWNTO 0);
+                         o_results : out STD_LOGIC_VECTOR (7 DOWNTO 0);
+                         o_flags : out STD_LOGIC_VECTOR (2 DOWNTO 0)
+                         );
+             end component ALU;     
   
 begin
 	-- PORT MAPS ----------------------------------------

@@ -35,21 +35,42 @@ library ieee;
 
 
 entity ALU is
--- TODO
+    port (
+    i_A : in STD_LOGIC_VECTOR (7 DOWNTO 0);
+    i_B : in STD_LOGIC_VECTOR (7 DOWNTO 0);
+    i_op : in STD_LOGIC_VECTOR (2 DOWNTO 0);
+    o_results : out STD_LOGIC_VECTOR (7 DOWNTO 0);
+    o_flags : out STD_LOGIC_VECTOR (2 DOWNTO 0)
+    );
 end ALU;
 
 architecture behavioral of ALU is 
   
 	-- declare components and signals
+    signal w_decoderOne : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    signal w_adder : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    signal w_SEL : STD_LOGIC_VECTOR(1 DOWNTO 0);
+    signal w_D_IN : STD_LOGIC_VECTOR(3 DOWNTO 0);
 
-  
+    
 begin
 	-- PORT MAPS ----------------------------------------
-
+	    w_decoderOne <= not i_B when i_op(2) = '1' else 
+	                 i_B;
+        w_adder <= (i_A XOR w_decoderOne) OR i_op(2);
+        
+        with w_SEL select
+            o_results <= w_adder when "00",
+--                          when "01",
+--                          when "10",
+--                          when "11",
+                         "00000000" when others;
 	
 	
 	-- CONCURRENT STATEMENTS ----------------------------
-	
+	   o_flags[0] <= i_results(7);
+	   o_flags[1] <= not (i_results or i_results);
+	   
 	
 	
 end behavioral;
