@@ -106,6 +106,14 @@ architecture top_basys3_arch of top_basys3 is
         );
     end component ALU;
     
+    component REG is
+        port (
+            i_LD: in std_logic;
+            i_D : in std_logic_vector (7 downto 0);
+            o_D : out std_logic_vector (7 downto 0)
+        );
+    end component REG;
+    
     
     signal w_cycle : STD_LOGIC_VECTOR (3 DOWNTO 0);
     signal w_clk1 : STD_LOGIC;
@@ -113,7 +121,7 @@ architecture top_basys3_arch of top_basys3 is
     signal w_A : STD_LOGIC_VECTOR (7 DOWNTO 0);
     signal w_B : STD_LOGIC_VECTOR (7 DOWNTO 0);
     signal w_results : STD_LOGIC_VECTOR (7 DOWNTO 0);
-    signal w_bin : STD_LOGIC_VECTOR (7 DOWNTO 0);
+    signal w_number_display : STD_LOGIC_VECTOR (7 DOWNTO 0);
     signal w_sign : STD_LOGIC_VECTOR (3 DOWNTO 0);
     signal w_hund : STD_LOGIC_VECTOR (3 DOWNTO 0);
     signal w_tens : STD_LOGIC_VECTOR (3 DOWNTO 0);
@@ -122,7 +130,7 @@ architecture top_basys3_arch of top_basys3 is
     signal w_sel : STD_LOGIC_VECTOR (3 DOWNTO 0);
     signal w_flags : STD_LOGIC_VECTOR (2 DOWNTO 0);
     signal w_an : STD_LOGIC_VECTOR (3 DOWNTO 0);
-    signal w_op : STD_LOGIC_VECTOR (2 DOWNTO 0);
+    --signal w_op : STD_LOGIC_VECTOR (2 DOWNTO 0);
 begin
 	-- PORT MAPS ----------------------------------------
     TDM4_inst: TDM4
@@ -139,7 +147,7 @@ begin
     
     twoscomp_decimal_inst: twoscomp_decimal
     port map(
-        i_binary => w_bin,
+        i_binary => w_number_display,
         o_negative => w_sign(0),
         o_hundreds => w_hund,
         o_tens => w_tens,
@@ -180,25 +188,38 @@ begin
     port map (
         i_A => w_A,
         i_B => w_B,
-        i_op => w_op,
+        i_op => sw(2 DOWNTO 0),
         o_results => w_results,
         o_flags => w_flags
 	);
 	
+	REG_A_inst: REG
+	port map (
+	   i_LD => w_cycle(0),
+	   i_D => sw(7 DOWNTO 0),
+	   o_D => w_A
+	);
+	
+	REG_B_inst: REG
+    port map (
+       i_LD => w_cycle(1),
+       i_D => sw(7 DOWNTO 0),
+       o_D => w_B
+    );
 	
 	-- CONCURRENT STATEMENTS ----------------------------
-	w_A <= sw(7 DOWNTO 0) when w_cycle = "1000";
-	w_B <= sw(7 DOWNTO 0) when w_cycle = "0001";
-	w_op <= sw(2 DOWNTO 0) when w_cycle = "0010";
 	w_an <= "1111" when w_cycle = "1000" else
 	        w_sel;
-	w_bin <= w_A when w_cycle = "0001" else
-	         w_B when w_cycle = "0010" else
-	         w_results when w_cycle = "0100";
+	w_number_display <= w_A when w_cycle = "0001" else
+                        w_B when w_cycle = "0010" else
+                        w_results when w_cycle = "0100";
 	
 	led(15 DOWNTO 13) <= w_flags;
 	led(12 DOWNTO 4) <= (others => '0');
-	led(3 DOWNTO 0) <= w_cycle;
+	led(3) <= w_cycle(3);
+	led(2) <= w_cycle(2);
+	led(1) <= w_cycle(1);
+	led(0) <= w_cycle(0);
 	an(3 DOWNTO 0) <= w_an;
 	
 	
