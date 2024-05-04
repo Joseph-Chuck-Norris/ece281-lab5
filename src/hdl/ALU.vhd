@@ -34,6 +34,7 @@ library ieee;
   use ieee.numeric_std.all;
 
 
+
 entity ALU is
     port (
     i_A : in STD_LOGIC_VECTOR (7 DOWNTO 0);
@@ -47,7 +48,7 @@ end ALU;
 architecture behavioral of ALU is 
   
 	-- declare components and signals
-    signal w_decoderOne : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    --signal w_decoderOne : STD_LOGIC_VECTOR(7 DOWNTO 0);
     signal w_adder : STD_LOGIC_VECTOR(7 DOWNTO 0);
     signal w_output : STD_LOGIC_VECTOR(7 DOWNTO 0);
     --signal w_SEL : STD_LOGIC_VECTOR(1 DOWNTO 0);
@@ -57,22 +58,23 @@ architecture behavioral of ALU is
 begin
 	-- PORT MAPS ----------------------------------------
 	    
-	    w_decoderOne <= not i_B when i_op(2) = '1' else 
-	                 i_B;
-        w_adder <= (std_logic_vector(unsigned(i_A) + unsigned(w_decoderOne))) when i_op(2) = '0' else
-                   (std_logic_vector(unsigned(i_A) + unsigned(not w_decoderOne) + 1));
-        
-        with i_op(1 DOWNTO 0) select
-            w_output <= w_adder when "00",
---                          when "01", and/nand
---                          when "10", or/nor
---                          when "11", shift
-                         "00000000" when others;
+	    --w_decoderOne <= not i_B when i_op(2) = '1' else 
+	    --           i_B;
+        --w_adder <= (std_logic_vector(unsigned(i_A) + unsigned(w_decoderOne))) when i_op(2) = '0'else
+          --         (std_logic_vector(unsigned(i_A) + unsigned(not w_decoderOne) + 1));
+        w_adder <= std_logic_vector(unsigned(i_A) + unsigned(i_B));
+--        with i_op(1 DOWNTO 0) select
+--            w_output <= w_adder when "00",
+----                          when "01", and/nand
+----                          when "10", or/nor
+----                          when "11", shift
+--                         "00000000" when others;
+       w_output <= w_adder;
 	   o_results <= w_output;
 	
 	-- CONCURRENT STATEMENTS ----------------------------
-	   o_flags(0) <= w_output(7); -- negative flag
-	   o_flags(1) <= '1' when (w_output = "00000000") else '0'; -- zero flag
+	   --o_flags(0) <= w_output(7); -- negative flag
+	   --o_flags(1) <= '1' when (w_output = "00000000") else '0'; -- zero flag
 	   
 	
 	

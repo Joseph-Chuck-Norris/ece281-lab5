@@ -28,7 +28,7 @@ library ieee;
 entity top_basys3 is
 -- TODO 
     port(
-         clk     :   in std_logic; -- native 100MHz FPGA clock
+        clk     :   in std_logic; -- native 100MHz FPGA clock
         sw      :   in std_logic_vector(7 downto 0);
         btnU    :   in std_logic; -- master_reset
         btnC    :   in std_logic; -- clk_reset
@@ -91,6 +91,7 @@ architecture top_basys3_arch of top_basys3 is
         Port (
             i_reset   : in  STD_LOGIC;
             i_adv : in  STD_LOGIC;
+            i_clk : in STD_LOGIC;
             o_cycle   : out STD_LOGIC_VECTOR (3 downto 0)           
         );
     end component controller_fsm;
@@ -103,18 +104,12 @@ architecture top_basys3_arch of top_basys3 is
             o_results : out STD_LOGIC_VECTOR (7 DOWNTO 0);
             o_flags : out STD_LOGIC_VECTOR (2 DOWNTO 0)
         );
-    end component ALU;   
+    end component ALU;
     
-    component REG is
-        port (
-            i_LD: in std_logic;
-            i_D : in std_logic_vector (7 downto 0);
-            o_D : out std_logic_vector (7 downto 0)
-        );
-    end component REG;  
     
     signal w_cycle : STD_LOGIC_VECTOR (3 DOWNTO 0);
-    signal w_clk : STD_LOGIC;
+    signal w_clk1 : STD_LOGIC;
+    signal w_clk2 : STD_LOGIC;
     signal w_A : STD_LOGIC_VECTOR (7 DOWNTO 0);
     signal w_B : STD_LOGIC_VECTOR (7 DOWNTO 0);
     signal w_results : STD_LOGIC_VECTOR (7 DOWNTO 0);
@@ -127,16 +122,17 @@ architecture top_basys3_arch of top_basys3 is
     signal w_sel : STD_LOGIC_VECTOR (3 DOWNTO 0);
     signal w_flags : STD_LOGIC_VECTOR (2 DOWNTO 0);
     signal w_an : STD_LOGIC_VECTOR (3 DOWNTO 0);
+    signal w_op : STD_LOGIC_VECTOR (2 DOWNTO 0);
 begin
 	-- PORT MAPS ----------------------------------------
     TDM4_inst: TDM4
     port map(
-        i_clk => w_clk,
+        i_clk => w_clk1,
         i_reset => '0',
-        i_D3 => w_ones,
-        i_D2 => w_tens,
-        i_D1 => w_hund,
-        i_D0 => w_sign,
+        i_D0 => w_ones,
+        i_D1 => w_tens,
+        i_D2 => w_hund,
+        i_D3 => w_sign,
         o_data => w_data,
         o_sel => w_sel
     );
@@ -150,13 +146,21 @@ begin
         o_ones => w_ones
     );
     
-    clkdiv_inst: clock_divider
+    clkdiv_inst1: clock_divider
     generic map ( k_DIV => 208333)
     port map (
         i_clk => clk,
         i_reset => '0',
-        o_clk => w_clk
+        o_clk => w_clk1
     );
+    
+    clkdiv_inst2: clock_divider
+        generic map ( k_DIV => 12500000)
+        port map (
+            i_clk => clk,
+            i_reset => '0',
+            o_clk => w_clk2
+        );
     
     sevenSeg_inst: sevenSegDecoder
     port map (
@@ -168,6 +172,7 @@ begin
     port map (
     i_reset => btnU,
     i_adv => btnC,
+    i_clk => w_clk2,
     o_cycle => w_cycle
     );
     
@@ -175,34 +180,24 @@ begin
     port map (
         i_A => w_A,
         i_B => w_B,
-        i_op => sw(2 DOWNTO 0),
+        i_op => w_op,
         o_results => w_results,
         o_flags => w_flags
 	);
 	
-	REG_A_inst: REG
-	port map (
-	    i_LD => w_cycle(3),
-        i_D => sw(7 DOWNTO 0),
-        o_D => w_A
-	);
-	
-	REG_B_inst: REG
-        port map (
-            i_LD => w_cycle(2),
-            i_D => sw(7 DOWNTO 0),
-            o_D => w_A
-        );
 	
 	-- CONCURRENT STATEMENTS ----------------------------
-	
-	w_an <= x"F" when w_cycle(0) = '1' else
+	w_A <= sw(7 DOWNTO 0) when w_cycle = "1000";
+	w_B <= sw(7 DOWNTO 0) when w_cycle = "0001";
+	w_op <= sw(2 DOWNTO 0) when w_cycle = "0010";
+	w_an <= "1111" when w_cycle = "1000" else
 	        w_sel;
-	w_bin <= w_A when w_cycle(3) = '1' else
-	         w_B when w_cycle(2) = '1' else
-	         w_results when w_cycle(1) = '1';
+	w_bin <= w_A when w_cycle = "0001" else
+	         w_B when w_cycle = "0010" else
+	         w_results when w_cycle = "0100";
 	
 	led(15 DOWNTO 13) <= w_flags;
+	led(12 DOWNTO 4) <= (others => '0');
 	led(3 DOWNTO 0) <= w_cycle;
 	an(3 DOWNTO 0) <= w_an;
 	
