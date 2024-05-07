@@ -49,9 +49,9 @@ architecture behavioral of ALU is
   
 	-- declare components and signals
     signal w_adder : STD_LOGIC_VECTOR(8 DOWNTO 0);
-    signal w_and_nand : STD_LOGIC_VECTOR(8 DOWNTO 0);
-    signal w_or_nor : STD_LOGIC_VECTOR(8 DOWNTO 0);
-    signal w_shift : STD_LOGIC_VECTOR(8 DOWNTO 0);
+    signal w_and_nand : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    signal w_or_nor : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    signal w_shift : STD_LOGIC_VECTOR(7 DOWNTO 0);
     signal w_output : STD_LOGIC_VECTOR(7 DOWNTO 0);
 
 
