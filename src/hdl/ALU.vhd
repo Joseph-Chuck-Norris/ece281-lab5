@@ -58,11 +58,11 @@ architecture behavioral of ALU is
     
 begin
        w_adder <= std_logic_vector(unsigned('0'&i_A) + unsigned('0'&i_B)) when i_op(2) = '0' else
-                  std_logic_vector(unsigned('0'&i_A) - unsigned('0'&i_B));
+                  std_logic_vector(unsigned('0'&i_A) + unsigned(not('0'&i_B)) + 1);
        w_and_nand <= i_A AND i_B when i_op(2) = '0' else
                      NOT(i_A AND i_B);
        w_or_nor <= i_A OR i_B when i_op(2) = '0' else
-                   NOT(i_A NOR i_B);
+                   NOT(i_A OR i_B);
      
        w_shift <= std_logic_vector(shift_left(unsigned(i_A), to_integer(unsigned(i_B(2 downto 0))))) when i_op(2) = '0' else
                   std_logic_vector(shift_right(unsigned(i_A), to_integer(unsigned(i_B(2 downto 0)))));
@@ -74,7 +74,8 @@ begin
                    w_shift(7 DOWNTO 0);
 	   o_results <= w_output;
 	   o_flags(2) <= '1' when (w_output(7) = '1') else '0';
-	   o_flags(0) <= w_adder(8); -- C out
+	   o_flags(0) <= w_adder(8) when i_op(1 DOWNTO 0) = "00" else
+	                 '0'; -- C out
 	   o_flags(1) <= '1' when (w_output = "00000000") else '0'; -- zero flag
 	   
 	

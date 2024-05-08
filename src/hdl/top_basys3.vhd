@@ -195,14 +195,14 @@ begin
 	
 	REG_A_inst: REG
 	port map (
-	   i_LD => w_cycle(0),
+	   i_LD => w_cycle(3),
 	   i_D => sw(7 DOWNTO 0),
 	   o_D => w_A
 	);
 	
 	REG_B_inst: REG
     port map (
-       i_LD => w_cycle(1),
+       i_LD => w_cycle(0),
        i_D => sw(7 DOWNTO 0),
        o_D => w_B
     );
@@ -214,7 +214,7 @@ begin
                         w_B when w_cycle = "0010" else
                         w_results when w_cycle = "0100";
 	
-	led(15 DOWNTO 13) <= w_flags;
+	led(15 DOWNTO 13) <= "000" when w_cycle = "1000" else w_flags;
 	led(12 DOWNTO 4) <= (others => '0');
 	led(3) <= w_cycle(3);
 	led(2) <= w_cycle(2);
